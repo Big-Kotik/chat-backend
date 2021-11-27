@@ -20,6 +20,6 @@ public class UserRegisterForm {
 
     @NotNull
     @Pattern(regexp = "[a-zA-Z0-9#!_@]+")
-    @Size(min = 8, max = 32, message = "passwordConformation size between 8 and 32")
-    private String passwordConformation;
+    @Size(min = 8, max = 32, message = "passwordConfirmation size between 8 and 32")
+    private String passwordConfirmation;
 }

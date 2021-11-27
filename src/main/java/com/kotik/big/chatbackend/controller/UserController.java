@@ -64,7 +64,7 @@ public class UserController {
                 .build();
     }
 
-    @PostMapping
+    @PostMapping("/auth")
     public ResponseEntity<UserDTO> login(@RequestBody @Valid UserLoginForm loginForm,
                                          BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
