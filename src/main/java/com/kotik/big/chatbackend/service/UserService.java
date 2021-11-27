@@ -2,6 +2,7 @@ package com.kotik.big.chatbackend.service;
 
 import com.google.common.hash.Hashing;
 import com.kotik.big.chatbackend.dto.UserDTO;
+import com.kotik.big.chatbackend.dto.UserLoginForm;
 import com.kotik.big.chatbackend.dto.UserRegisterForm;
 import com.kotik.big.chatbackend.dto.UserToSocket;
 import com.kotik.big.chatbackend.model.User;
@@ -57,6 +58,10 @@ public class UserService {
             return true;
         }
         return false;
+    }
+
+    public Optional<User> findByLoginAndPassword(UserLoginForm loginForm) {
+        return userRepository.findByLoginAndPasswordSha(loginForm.getLogin(), getPasswordSha(loginForm.getPassword()));
     }
 
     public List<User> findAll() {
