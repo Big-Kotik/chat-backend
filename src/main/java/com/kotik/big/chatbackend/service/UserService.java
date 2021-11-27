@@ -1,13 +1,11 @@
 package com.kotik.big.chatbackend.service;
 
 import com.google.common.hash.Hashing;
-import com.kotik.big.chatbackend.dto.UserDTO;
 import com.kotik.big.chatbackend.dto.UserLoginForm;
 import com.kotik.big.chatbackend.dto.UserRegisterForm;
-import com.kotik.big.chatbackend.dto.UserToSocket;
+import com.kotik.big.chatbackend.dto.SocketId;
 import com.kotik.big.chatbackend.model.User;
 import com.kotik.big.chatbackend.repository.UserRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,10 +48,10 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public boolean updateSocketId(UserToSocket userToSocket) {
-        Optional<User> user = userRepository.findById(userToSocket.getUserId());
+    public boolean updateSocketId(SocketId socketId, Long id) {
+        Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
-            user.get().setSocketId(userToSocket.getSocketId());
+            user.get().setSocketId(socketId.getSocketId());
             userRepository.save(user.get());
             return true;
         }

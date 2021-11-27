@@ -3,18 +3,18 @@ package com.kotik.big.chatbackend.controller;
 import com.kotik.big.chatbackend.dto.UserDTO;
 import com.kotik.big.chatbackend.dto.UserLoginForm;
 import com.kotik.big.chatbackend.dto.UserRegisterForm;
-import com.kotik.big.chatbackend.dto.UserToSocket;
+import com.kotik.big.chatbackend.dto.SocketId;
 import com.kotik.big.chatbackend.dto.validator.UserLoginValidator;
 import com.kotik.big.chatbackend.dto.validator.UserRegisterValidator;
 import com.kotik.big.chatbackend.model.User;
 import com.kotik.big.chatbackend.service.UserService;
-import com.sun.source.tree.OpensTree;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -49,11 +49,14 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDTO> newUser(@RequestBody @Valid UserRegisterForm registerForm,
-                                           BindingResult bindingResult) {
+                                           BindingResult bindingResult,
+                                           HttpSession session) {
         if (bindingResult.hasErrors()) {
             return getErrors(bindingResult);
         }
-        return ResponseEntity.ok().body(new UserDTO(userService.save(registerForm)));
+        UserDTO userDTO = new UserDTO(userService.save(registerForm));
+        session.setAttribute("user", userDTO);
+        return ResponseEntity.ok().body(userDTO);
     }
 
     private ResponseEntity<UserDTO> getErrors(BindingResult bindingResult) {
@@ -66,14 +69,31 @@ public class UserController {
 
     @PostMapping("/auth")
     public ResponseEntity<UserDTO> login(@RequestBody @Valid UserLoginForm loginForm,
-                                         BindingResult bindingResult) {
+                                         BindingResult bindingResult,
+                                         HttpSession session) {
         if (bindingResult.hasErrors()) {
             return getErrors(bindingResult);
         }
         Optional<User> user = userService.findByLoginAndPassword(loginForm);
+        user.ifPresent(value -> session.setAttribute("user", new UserDTO(value)));
         return user.map(value -> ResponseEntity.ok().body(new UserDTO(value)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
 
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<UserDTO> logout(HttpSession session) {
+        UserDTO user = (UserDTO) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        session.removeAttribute("user");
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/current")
+    public ResponseEntity<UserDTO> current(HttpSession session) {
+        return ResponseEntity.ok((UserDTO) session.getAttribute("user"));
     }
 
     @GetMapping("/{id}")
@@ -83,12 +103,14 @@ public class UserController {
     }
 
     @PostMapping("/connect")
-    public HttpStatus connectToSocket(@RequestBody @Valid UserToSocket userToSocket,
-                                      BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
+    public HttpStatus connectToSocket(@RequestBody @Valid SocketId socketId,
+                                      BindingResult bindingResult,
+                                      HttpSession session) {
+        UserDTO userDTO = (UserDTO) session.getAttribute("user");
+        if (bindingResult.hasErrors() || userDTO == null) {
             return HttpStatus.BAD_REQUEST;
         }
-        return userService.updateSocketId(userToSocket) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+        return userService.updateSocketId(socketId, userDTO.getId()) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
     }
 
     @GetMapping
@@ -97,7 +119,11 @@ public class UserController {
     }
 
     @GetMapping("/{id}/socketId")
-    public ResponseEntity<String> getSocketId(@PathVariable Long id) {
+    public ResponseEntity<String> getSocketId(@PathVariable Long id,
+                                              HttpSession session) {
+        if (session.getAttribute("user") == null) {
+            return ResponseEntity.badRequest().build();
+        }
         return userService.findSocketId(id).map(value -> ResponseEntity.ok().body(value))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
