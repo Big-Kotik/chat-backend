@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@CrossOrigin
 public class UserController {
     private final UserService userService;
     private final UserRegisterValidator userRegisterValidator;
