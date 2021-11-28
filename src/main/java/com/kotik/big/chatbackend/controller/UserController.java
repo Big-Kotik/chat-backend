@@ -1,9 +1,6 @@
 package com.kotik.big.chatbackend.controller;
 
-import com.kotik.big.chatbackend.dto.UserDTO;
-import com.kotik.big.chatbackend.dto.UserLoginForm;
-import com.kotik.big.chatbackend.dto.UserRegisterForm;
-import com.kotik.big.chatbackend.dto.SocketId;
+import com.kotik.big.chatbackend.dto.*;
 import com.kotik.big.chatbackend.dto.validator.UserLoginValidator;
 import com.kotik.big.chatbackend.dto.validator.UserRegisterValidator;
 import com.kotik.big.chatbackend.model.User;
@@ -48,7 +45,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> newUser(@RequestBody @Valid UserRegisterForm registerForm,
+    public ResponseEntity<?> newUser(@RequestBody @Valid UserRegisterForm registerForm,
                                            BindingResult bindingResult,
                                            HttpSession session) {
         if (bindingResult.hasErrors()) {
@@ -59,16 +56,12 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
 
-    private ResponseEntity<UserDTO> getErrors(BindingResult bindingResult) {
-        return ResponseEntity.badRequest().header("errors",
-                        Stream.of(bindingResult.getFieldErrors())
-                                .map(Object::toString)
-                                .collect(Collectors.joining("\n")))
-                .build();
+    private ResponseEntity<?> getErrors(BindingResult bindingResult) {
+        return ResponseEntity.badRequest().body(bindingResult.getFieldErrors().stream().map(MyFieldError::new));
     }
 
     @PostMapping("/auth")
-    public ResponseEntity<UserDTO> login(@RequestBody @Valid UserLoginForm loginForm,
+    public ResponseEntity<?> login(@RequestBody @Valid UserLoginForm loginForm,
                                          BindingResult bindingResult,
                                          HttpSession session) {
         if (bindingResult.hasErrors()) {
