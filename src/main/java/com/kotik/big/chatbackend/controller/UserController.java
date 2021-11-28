@@ -56,12 +56,12 @@ public class UserController {
         }
         UserDTO userDTO = new UserDTO(userService.save(registerForm));
         session.setAttribute("user", userDTO);
-        return ResponseEntity.ok().body(userDTO);
+        return ResponseEntity.ok(userDTO);
     }
 
     private ResponseEntity<UserDTO> getErrors(BindingResult bindingResult) {
         return ResponseEntity.badRequest().header("errors",
-                        Stream.of(bindingResult.getAllErrors())
+                        Stream.of(bindingResult.getFieldErrors())
                                 .map(Object::toString)
                                 .collect(Collectors.joining("\n")))
                 .build();
@@ -76,8 +76,7 @@ public class UserController {
         }
         Optional<User> user = userService.findByLoginAndPassword(loginForm);
         user.ifPresent(value -> session.setAttribute("user", new UserDTO(value)));
-        return user.map(value -> ResponseEntity.ok().body(new UserDTO(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.of(user.map(UserDTO::new));
 
     }
 
@@ -93,24 +92,25 @@ public class UserController {
 
     @GetMapping("/current")
     public ResponseEntity<UserDTO> current(HttpSession session) {
-        return ResponseEntity.ok((UserDTO) session.getAttribute("user"));
+        return ResponseEntity.of(Optional.ofNullable((UserDTO) session.getAttribute("user")));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-        return userService.findById(id).map(value -> ResponseEntity.ok().body(new UserDTO(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.of(userService.findById(id).map(UserDTO::new));
     }
 
     @PostMapping("/connect")
-    public HttpStatus connectToSocket(@RequestBody @Valid SocketId socketId,
+    public ResponseEntity<String> connectToSocket(@RequestBody @Valid SocketId socketId,
                                       BindingResult bindingResult,
                                       HttpSession session) {
         UserDTO userDTO = (UserDTO) session.getAttribute("user");
         if (bindingResult.hasErrors() || userDTO == null) {
-            return HttpStatus.BAD_REQUEST;
+            return ResponseEntity.badRequest().build();
         }
-        return userService.updateSocketId(socketId, userDTO.getId()) ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+        return userService.updateSocketId(socketId, userDTO.getId()) ?
+                ResponseEntity.ok("Socket added") :
+                ResponseEntity.notFound().build();
     }
 
     @GetMapping
@@ -124,7 +124,12 @@ public class UserController {
         if (session.getAttribute("user") == null) {
             return ResponseEntity.badRequest().build();
         }
-        return userService.findSocketId(id).map(value -> ResponseEntity.ok().body(value))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.of(userService.findSocketId(id));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    public HttpStatus illegalArgumentHandler() {
+        return HttpStatus.BAD_REQUEST;
     }
 }
