@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
@@ -22,7 +23,7 @@ import java.util.Date;
 @Setter
 @Getter
 @NoArgsConstructor
-public class User {
+public class User{
     @Id
     @GeneratedValue
     @Column(nullable = false)

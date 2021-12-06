@@ -2,14 +2,15 @@ package com.kotik.big.chatbackend.model;
 
 import lombok.AllArgsConstructor;
 
+import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
 public enum Role {
-    USER(Set.of(Permission.BASIC));
-    private final Set<Permission> permissions;
+    USER(List.of(Permission.BASIC));
+    private final List<Permission> permissions;
 
-    public Set<Permission> getPermissions() {
+    public List<Permission> getPermissions() {
         return permissions;
     }
 }
