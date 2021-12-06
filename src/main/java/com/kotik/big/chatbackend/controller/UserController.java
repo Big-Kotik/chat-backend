@@ -87,12 +87,12 @@ public class UserController {
     @GetMapping("/current")
     public ResponseEntity<UserDTO> current(HttpSession session) {
         return ResponseEntity.of(Optional.ofNullable((UserDTO) session.getAttribute("user")));
-    }
+    } //TODO: remove this method
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.of(userService.findById(id).map(UserDTO::new));
-    }
+    } //TODO: huh?
 
     @PostMapping("/connect")
     public ResponseEntity<String> connectToSocket(@RequestBody @Valid SocketId socketId,
@@ -110,14 +110,14 @@ public class UserController {
     @GetMapping
     public List<UserDTO> findAll() {
         return userService.findAll().stream().map(UserDTO::new).collect(Collectors.toList());
-    }
+    } //TODO: why?
 
     @GetMapping("/{id}/socketId")
     public ResponseEntity<String> getSocketId(@PathVariable Long id,
                                               HttpSession session) {
         if (session.getAttribute("user") == null) {
             return ResponseEntity.badRequest().build();
-        }
+        } //TODO: replace with spring security
         return ResponseEntity.of(userService.findSocketId(id));
     }
 

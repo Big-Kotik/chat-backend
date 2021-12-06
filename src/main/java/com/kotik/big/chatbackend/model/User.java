@@ -44,4 +44,8 @@ public class User {
     @CreationTimestamp
     @Column(nullable = false)
     private Date creationTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 }
