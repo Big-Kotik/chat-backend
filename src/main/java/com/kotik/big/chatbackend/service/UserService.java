@@ -44,6 +44,10 @@ public class UserService {
         return userRepository.findByLogin(login).isEmpty();
     }
 
+    public Optional<User> findByLogin(String login) {
+        return userRepository.findByLogin(login);
+    }
+
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }

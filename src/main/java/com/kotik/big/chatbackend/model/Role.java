@@ -1,11 +1,11 @@
 package com.kotik.big.chatbackend.model;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Set;
 
-@AllArgsConstructor
+
+@RequiredArgsConstructor
 public enum Role {
     USER(List.of(Permission.BASIC));
     private final List<Permission> permissions;
