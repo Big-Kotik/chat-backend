@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -17,6 +20,11 @@ public class JwtUtil {
     private String secret;
     @Value("${jwt.expiration}")
     private int expirationTimeInMinutes;
+
+    @PostConstruct
+    private void encodeSecret() {
+        secret = Base64.getEncoder().encodeToString(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     public String createToken(String username) {
         Claims claims = Jwts.claims().setSubject(username);

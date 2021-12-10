@@ -4,9 +4,13 @@ import com.kotik.big.chatbackend.dto.*;
 import com.kotik.big.chatbackend.dto.validator.UserLoginValidator;
 import com.kotik.big.chatbackend.dto.validator.UserRegisterValidator;
 import com.kotik.big.chatbackend.model.User;
+import com.kotik.big.chatbackend.security.JwtUtil;
 import com.kotik.big.chatbackend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -25,13 +27,17 @@ public class UserController {
     private final UserService userService;
     private final UserRegisterValidator userRegisterValidator;
     private final UserLoginValidator userLoginValidator;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     public UserController(UserService userService,
                           UserRegisterValidator userRegisterValidator,
-                          UserLoginValidator userLoginValidator) {
+                          UserLoginValidator userLoginValidator, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.userService = userService;
         this.userRegisterValidator = userRegisterValidator;
         this.userLoginValidator = userLoginValidator;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
     }
 
     @InitBinder
@@ -45,33 +51,32 @@ public class UserController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<?> newUser(@RequestBody @Valid UserRegisterForm registerForm,
-                                           BindingResult bindingResult,
-                                           HttpSession session) {
-        if (bindingResult.hasErrors()) {
-            return getErrors(bindingResult);
-        }
-        UserDTO userDTO = new UserDTO(userService.save(registerForm));
-        session.setAttribute("user", userDTO);
-        return ResponseEntity.ok(userDTO);
-    }
-
     private ResponseEntity<?> getErrors(BindingResult bindingResult) {
         return ResponseEntity.badRequest().body(bindingResult.getFieldErrors().stream().map(MyFieldError::new));
     }
 
-    @PostMapping("/auth")
-    public ResponseEntity<?> login(@RequestBody @Valid UserLoginForm loginForm,
-                                         BindingResult bindingResult,
-                                         HttpSession session) {
+    @PostMapping
+    public ResponseEntity<?> newUser(@RequestBody @Valid UserRegisterForm registerForm,
+                                     BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return getErrors(bindingResult);
         }
-        Optional<User> user = userService.findByLoginAndPassword(loginForm);
-        user.ifPresent(value -> session.setAttribute("user", new UserDTO(value)));
-        return ResponseEntity.of(user.map(UserDTO::new));
+        UserDTO userDTO = new UserDTO(userService.save(registerForm));
+        return ResponseEntity.ok(userDTO);
+    }
 
+    @PostMapping("/auth")
+    public ResponseEntity<?> login(@RequestBody @Valid UserLoginForm loginForm,
+                                   BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return getErrors(bindingResult);
+        }
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginForm.getUsername(), loginForm.getPassword()));
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok().
+                header("Authorization", jwtUtil.createToken(user.getUsername()))
+                .body(new UserDTO(user));
     }
 
     @PostMapping("/logout")
@@ -84,20 +89,15 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/current")
-    public ResponseEntity<UserDTO> current(HttpSession session) {
-        return ResponseEntity.of(Optional.ofNullable((UserDTO) session.getAttribute("user")));
-    } //TODO: remove this method
-
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.of(userService.findById(id).map(UserDTO::new));
-    } //TODO: huh?
+    }
 
     @PostMapping("/connect")
     public ResponseEntity<String> connectToSocket(@RequestBody @Valid SocketId socketId,
-                                      BindingResult bindingResult,
-                                      HttpSession session) {
+                                                  BindingResult bindingResult,
+                                                  HttpSession session) {
         UserDTO userDTO = (UserDTO) session.getAttribute("user");
         if (bindingResult.hasErrors() || userDTO == null) {
             return ResponseEntity.badRequest().build();
@@ -110,14 +110,11 @@ public class UserController {
     @GetMapping
     public List<UserDTO> findAll() {
         return userService.findAll().stream().map(UserDTO::new).collect(Collectors.toList());
-    } //TODO: why?
+    }
 
     @GetMapping("/{id}/socketId")
     public ResponseEntity<String> getSocketId(@PathVariable Long id,
                                               HttpSession session) {
-        if (session.getAttribute("user") == null) {
-            return ResponseEntity.badRequest().build();
-        } //TODO: replace with spring security
         return ResponseEntity.of(userService.findSocketId(id));
     }
 
