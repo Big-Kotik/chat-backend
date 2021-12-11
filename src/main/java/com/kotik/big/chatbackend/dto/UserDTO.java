@@ -10,12 +10,12 @@ import java.util.Date;
 @NoArgsConstructor
 public class UserDTO {
     private Long id;
-    private String login;
+    private String username;
     private Date creationTime;
 
     public UserDTO(User user) {
         this.id = user.getId();
-        this.login = user.getLogin();
+        this.username = user.getUsername();
         this.creationTime = user.getCreationTime();
     }
 }

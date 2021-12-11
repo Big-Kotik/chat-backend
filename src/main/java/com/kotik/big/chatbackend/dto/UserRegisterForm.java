@@ -10,8 +10,8 @@ import javax.validation.constraints.Size;
 public class UserRegisterForm {
     @NotNull
     @Pattern(regexp = "[a-zA-Z0-9]+")
-    @Size(min = 4, max = 16, message = "login size between 4 and 16")
-    private String login;
+    @Size(min = 4, max = 16, message = "username size between 4 and 16")
+    private String username;
 
     @NotNull
     @Pattern(regexp = "[a-zA-Z0-9#!_@]+")

@@ -21,7 +21,7 @@ public class UserRegisterValidator implements Validator {
     public void validate(Object target, Errors errors) {
         if (!errors.hasErrors()) {
             UserRegisterForm userRegisterForm = (UserRegisterForm) target;
-            if (!userService.isVacant(userRegisterForm.getLogin())) {
+            if (!userService.isVacant(userRegisterForm.getUsername())) {
                 errors.rejectValue("login", "login.is-in-use", "login is in use already");
             } else if (!userRegisterForm.getPassword().equals(userRegisterForm.getPasswordConfirmation())) {
                 errors.rejectValue("password", "password.not-confirms",
