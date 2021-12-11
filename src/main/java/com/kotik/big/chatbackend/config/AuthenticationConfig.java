@@ -1,5 +1,6 @@
 package com.kotik.big.chatbackend.config;
 
+import com.kotik.big.chatbackend.security.JwtFilter;
 import com.kotik.big.chatbackend.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
@@ -11,16 +12,19 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @EnableWebSecurity
 public class AuthenticationConfig extends WebSecurityConfigurerAdapter {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtFilter jwtFilter;
 
-    public AuthenticationConfig(UserService userService, PasswordEncoder passwordEncoder) {
+    public AuthenticationConfig(UserService userService, PasswordEncoder passwordEncoder, JwtFilter jwtFilter) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.jwtFilter = jwtFilter;
     }
 
     @Override
@@ -45,6 +49,7 @@ public class AuthenticationConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v1/users/auth").permitAll()
                 .anyRequest().authenticated();
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); //magic
     }
 
     @Override

@@ -1,8 +1,7 @@
 package com.kotik.big.chatbackend.service;
 
-import com.kotik.big.chatbackend.dto.UserLoginForm;
-import com.kotik.big.chatbackend.dto.UserRegisterForm;
 import com.kotik.big.chatbackend.dto.SocketId;
+import com.kotik.big.chatbackend.dto.UserRegisterForm;
 import com.kotik.big.chatbackend.model.Role;
 import com.kotik.big.chatbackend.model.User;
 import com.kotik.big.chatbackend.repository.UserRepository;
@@ -50,18 +49,9 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public boolean updateSocketId(SocketId socketId, Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            user.get().setSocketId(socketId.getSocketId());
-            userRepository.save(user.get());
-            return true;
-        }
-        return false;
-    }
-
-    public Optional<User> findByUsernameAndPassword(UserLoginForm loginForm) {
-        return userRepository.findByUsernameAndPassword(loginForm.getUsername(), passwordEncoder.encode(loginForm.getPassword()));
+    public void updateSocketId(SocketId socketId, User user) {
+        user.setSocketId(socketId.getSocketId());
+        userRepository.save(user);
     }
 
     public List<User> findAll() {

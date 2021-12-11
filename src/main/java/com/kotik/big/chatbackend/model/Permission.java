@@ -1,7 +1,5 @@
 package com.kotik.big.chatbackend.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 

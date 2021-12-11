@@ -6,6 +6,7 @@ import com.kotik.big.chatbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
+@Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
@@ -33,5 +35,6 @@ public class JwtFilter extends OncePerRequestFilter {
         Optional<User> user = userService.findByUsername(login);
         user.ifPresent(value -> SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(value,
                 null, value.getAuthorities())));
+        filterChain.doFilter(request, response);
     }
 }
