@@ -3,12 +3,12 @@ package com.kotik.big.chatbackend.controller;
 import com.kotik.big.chatbackend.dto.UserDTO;
 import com.kotik.big.chatbackend.dto.UserLoginForm;
 import com.kotik.big.chatbackend.dto.UserRegisterForm;
+import com.kotik.big.chatbackend.dto.UserTokenDTO;
 import com.kotik.big.chatbackend.dto.validator.UserLoginValidator;
 import com.kotik.big.chatbackend.dto.validator.UserRegisterValidator;
 import com.kotik.big.chatbackend.model.User;
 import com.kotik.big.chatbackend.security.JwtUtil;
 import com.kotik.big.chatbackend.service.UserService;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,10 +17,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/api/v1/users")
 public class AuthController extends ErrorHandlingAbstractController {
     private final UserService userService;
@@ -68,18 +68,6 @@ public class AuthController extends ErrorHandlingAbstractController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginForm.getUsername(), loginForm.getPassword()));
         User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok().
-                header(HttpHeaders.AUTHORIZATION, jwtUtil.createToken(user.getUsername()))
-                .body(new UserDTO(user));
+        return ResponseEntity.ok(new UserTokenDTO(user, jwtUtil.createToken(user.getUsername())));
     }
-
-    @PostMapping("/logout")
-    public ResponseEntity<UserDTO> logout(HttpSession session) {
-        UserDTO user = (UserDTO) session.getAttribute("user");
-        if (user == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        session.removeAttribute("user");
-        return ResponseEntity.ok(user);
-    } //TODO
 }

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/api/v1/users")
 public class UserController extends ErrorHandlingAbstractController {
     private final UserService userService;
